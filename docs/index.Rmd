@@ -1,7 +1,6 @@
 ---
 title: "Data Cleaning"
 author: "Chinedu O"
-date: "2023-04-19"
 output: html_document
 ---
 
