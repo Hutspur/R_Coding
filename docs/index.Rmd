@@ -1,0 +1,211 @@
+---
+title: "Data Cleaning"
+author: "Chinedu O"
+date: "2023-04-19"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Data Cleaning Steps Using R
+
+To effectively clean data using R, use start by installing and loading the necessary packages.
+
+***
+Install useful packages using the following codes:
+
+* install.packages("here")
+* install.packages("janitor")
+* install.packages("skimr")
+* install.packages("dplyr")
+* install.packages("tidyverse")
+* install.packages("palmerpenguins")
+
+Once the installation is completed, load the library in R studio using the following codes:
+
+
+```{r message=FALSE}
+library(here)
+library(janitor)
+library(skimr)
+library(dplyr)
+library(tidyverse)
+```
+
+For this cleaning, we used the Palmerpenguins dataset pre-installed
+
+```{r message=FALSE}
+library(palmerpenguins)
+```
+
+## Get an overview of your data set
+### skim_without_charts Function
+To get a summarized overview of your data set, you can use different codes that provide different perspectives on our data.  First, we will use the skim_without_charts function to get a summary as shown below.
+*NB: This function is handy because it gives us an overview of the missing values and helps us to determine how we want to handle them. Later we will see a code for dropping missing values [drop_na()]
+
+```{r message=FALSE}
+skim_without_charts(penguins)
+```
+
+### glimpse Function
+We can also use the function glimpse to obtain a similar result. However, this is shorter, more concise, and does not provide the statistics of the missing value. Although it gives us a quick peep of the variables in our data set and their types as seen in the result below.
+
+```{r message=FALSE}
+glimpse(penguins)
+```
+### head Function
+The head function is used to get a quick overview of our data frame as it is arranged. It shows the first six rows of the data.
+
+```{r message=FALSE}
+head(penguins)
+```
+
+## Data manipulation
+#### Filtering with R
+To filter our data, we can use select to choose a specific column(s).   For example, let's say we wanted to see the total number of different penguin species, we can achieve these by:
+NB: In the code below, %>% is a pipe, it allows us to execute different operations with the variable as if it is flowing in a pipe.
+
+```{r message=FALSE}
+population_by_island <- penguins %>% 
+  select(species) %>% 
+  count(species)
+```
+
+In the above code chunk, we stored the filtered data in a new data frame population_by_island. We can view it by using the View function or by calling the variable.
+
+```{r message=FALSE}
+population_by_island 
+```
+
+
+
+#### Changing a column name
+First, we can view all the column names using the colnames function and change the name using the rename function. The syntax is written below
+
+```{r message=FALSE}
+colnames(population_by_island)
+```
+```{r}
+population_by_island <- population_by_island %>% 
+  rename(total_population=n)
+population_by_island
+```
+
+We can also achieve standardization of code by making the column names uniformly upper case or lower case to achieve that we use the following syntax
+
+```{r message=FALSE}
+rename_with(population_by_island, toupper)
+```
+ Then, back to lowercase
+ 
+```{r message=FALSE}
+rename_with(population_by_island, tolower)
+```
+
+We can additionally use the clean_names function to ensure the column name contains only strings, numbers, or underscore and without prohibited characters
+
+```{r message=FALSE}
+clean_names(population_by_island)
+```
+
+
+
+#### Sorting, filtering and Arranging 
+We can sort and arrange data using arrange, filter, or sort functions. For example. we can sort the population_by_island table in ascending order of population using this chunk of code:
+
+```{r message=FALSE}
+population_by_island %>% 
+  arrange(total_population)
+```
+
+Or in alphabetical order by species 
+```{r message=FALSE}
+population_by_island %>% 
+  arrange(species)
+```
+To sort in descending order we introduce a minus sign "-" before the column name or use the desc function. Look at the example below
+
+
+```{r message=FALSE}
+population_by_island %>% 
+  arrange(desc(species))
+# The code chunk below will achieve the same result.
+# population_by_island %>% 
+  #arrange(-species)
+```
+
+
+#### Groupping
+To group data, we use the group_by function. We can group data and summarize by group. See sample code below.
+  *NB: The drop_na is used to drop columns with na.*
+
+```{r message=FALSE}
+penguins %>% 
+  group_by(island) %>% 
+  drop_na() %>% 
+  summarise(mean_bill_length_mm = mean(bill_length_mm), 
+            max_bill_length_mm = max(bill_length_mm),
+            min_bill_length_mm = min(bill_length_mm))
+```
+
+
+### Other Functions for Data Cleaning
+We have the unite function and separate function which as their names imply helps us to join two columns or split one column into two. Let's see an example.
+
+#### Creating a data frame
+First, we create a data frame containing surname, first name, and department and we will join the surname and first name to form full name. 
+
+```{r message=FALSE}
+surname <- c("Asha", "Water", "Levi", "Agu", "Isike")
+firstname <- c("Stanley", "Linus", "Pulna", "Victor", "Anna")
+department <- c("HR", "Tech", "IT", "CS", "MG")
+
+office_df <- data.frame(surname, firstname, department)
+office_df
+```
+#### Merging Columns
+Next, we will use the unite function to create a new column called full_name which concatenates the surname and first name separated by a space.
+
+```{r message=FALSE}
+office_v2 = unite(office_df, "full_name", surname, firstname,sep = " ")
+office_v2
+```
+
+#### Splitting Columns
+From the above code, we saved the resulting table into office_v2. Next, we use the separate function to split the full name back into surname and first name.
+
+```{r message=FALSE}
+separate(office_v2, full_name, c("surname", "firstname"), sep=" ")
+```
+
+
+#### Add a new column to data
+Let's assume we have a vector salary that contains the salaries of the employees and we want to add it to the table, we can do so using the mutate function as shown below.
+
+```{r message=FALSE}
+salaries <- c(6500, 7000, 7300, 7500, 9000)
+mutate(office_df, salary = salaries)
+```
+#### Data manipulation in new columns
+We can also perform a little arithmetic calculation by putting the tax net salaries into the mutate function as follows
+First, let's assume they pay 23% tax and their net is 77% of what they earn. we can express that in the mutate function as follows:
+
+
+```{r message=FALSE}
+salaries <- c(6500, 7000, 7300, 7500, 9000)
+mutate(office_df, salary = salaries, tax = salaries*.23, net = salaries*.77)
+```
+
+With this, we have come to the end of data cleaning and manipulation. 
+
+Checkout my next work on data visualization to learn how to obtain a plot like this:
+
+```{r pressure, echo=FALSE}
+plot(pressure)
+```
+
+
+
+>**Stay motivated!!** 
